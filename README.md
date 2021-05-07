@@ -129,7 +129,57 @@ fun renderPersonList(Persons: Collection<Person>) =
 
 ### 2. 코틀린 기초
 
+- Hello, World!
 
+```kotlin
+fun main(args: Array<String>) {
+	println("Hello, world!")
+}
+```
 
+- 함수
 
+```kotlin
+fun max(a: Int, b: Int): Int {
+    return if (a > b) a else b
+}
+
+//식이 본문인 함수
+fun max(a: Int, b: Int): Int = if (a > b) a else b
+//반환타입 생략도 가능 - 컴파일러가 식의 결과 타입을 함수 반환 타입으로 정해주기 때문에
+fun max(a: Int, b: Int) = if (a > b) a else b
+```
+
+> kotlin은 루프를 제외한 대부분의 제어 구조가 식(expression)
+
+- 변수
+
+```kotlin
+val question = "삶, 우주, 그리고 모든 것에 대한 궁극적인 질문"
+val answer = 42
+val answer: Int = 42
+val yearsToCompute = 7.5e6
+
+//초기화 하지 않고 변수를 선언하려면 변수 타입을 명시
+val answer: Int
+answer = 42
+```
+
+> val 은 변경 불가능한 (final) 
+> var은 변경 가능하다.
+>
+> 기본적으로 val을 사용하면 객체를 side effect가 없는 함수와 조합이 가능하다.
+
+```kotlin
+//다음과 같은 코드는 정상 참조는 불변이라도 내부 값은 변경될 수 있음
+val message: String
+if (canPerformOperation()) {
+	message = "Success"
+} else {
+	message = "Failed"
+}
+
+val languages = arrayListOf("Java")
+languages.add("Kotlin")
+```
 
