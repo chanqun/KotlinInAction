@@ -137,6 +137,8 @@ fun main(args: Array<String>) {
 }
 ```
 
+#### 2.1 변수
+
 - 함수
 
 ```kotlin
@@ -183,3 +185,342 @@ val languages = arrayListOf("Java")
 languages.add("Kotlin")
 ```
 
+- 문자열 템플릿
+
+```kotlin
+// $를 쓰고 싶으면 \$ escape시켜야 한다.
+fun main(args: Array<String>) {
+    val name = if (args.size > 0) args[0] else "Kotlin"
+	println("Hello, $name!")
+}
+
+
+// 이것도 가능
+fun main(args: Array<String>) {
+    if (args.size > 0) {
+        println("Hello, ${args[0]}")
+    }
+}
+
+//한글은 $name이 작동 안 하므로 ${name} 습관을 들이는 것이 좋다.
+fun main(args: Array<String>) {
+    val name = if (args.size > 0) args[0] else "Kotlin"
+	println("${name}님 반가워요")
+}
+
+fun main(args: Array<String>) {
+	println("Hello, ${if (args.size > 0) args[0] else "Kotlin"}!")
+}
+```
+
+#### 2.2 클래스와 프로퍼티
+
+##### 2.2.1 클래스와 프로퍼티
+
+```kotlin
+//클래스
+class Person(val name: String)
+
+//프로퍼티 - val은 읽기 전용 var은 변경 가능
+class Person(
+	val name: String //getter만 제공
+    var isMarried: Boolean //getter setter 제공
+)
+
+fun main(args: Array<String>) {
+    val person = Person("Bob", true)
+    
+    println(person.name)
+    person.isMarried = false
+    println(person.isMarried)
+}
+```
+
+##### 2.2.2 커스텀 접근자
+
+```kotlin
+
+class Rectangle(val height:Int, val width: Int) {
+    val isSquare: Boolean
+    	get() {
+            return height == width
+        }
+	    //get() = height == width도 가능
+}
+
+fun main(args: Array<String>) {
+    val rectangle = Rectangle(3, 3)
+    println(rectangle.isSquare)
+}
+//true
+```
+
+#### 코틀린 소스코드 구조: 디렉토리와 패키지
+
+```kotlin
+package geometry.shapes
+
+import java.util.Random
+
+class Rectangle(val height: Int, val width: Int) {
+	val isSquare: Boolean
+	    get() = height == width도 가능
+}
+
+fun createRandomRectangle() : Rectangele {
+	val random = Random()
+	return Rectangle(random.nextInt(), random.nextInt())
+}
+
+//다른 곳에서 import할때도 같음
+```
+
+
+
+#### 2.3 선택 표현과 처리: enum과 when
+
+##### enum
+
+```kotlin
+//1
+enum class Color {
+	RED, ORANGE, YELLOW, GREEN, BLUE, INDIGO, VIOLET
+}
+//2
+enum class Color (
+	val r: Int, val g: Int, val b: Int
+) {
+    RED(255, 0, 0), GREEN(0, 255, 0), BLUE(0, 0, 255), ORANGE(255, 165, 0); 
+    //유일한 세미콜론
+    fun rgb() = (r * 256 + g) *256 + b
+}
+
+fun main(args: Array<String>) {
+    println(Color.BLUE.rgb())
+}
+//255
+```
+
+##### when - 분기 끝에 break;필요 없음
+
+```kotlin
+fun getMnemonic(color: Color) =
+	when (color) {
+		Color.RED, Color.ORANGE -> "Richard" //,분기도 가능
+		Color.GREEN -> "Gave"
+        Color.BLUE -> "Battle"
+    }
+
+//enum 상수 값을 import하면 Color.* Color도 필요 없음
+
+//섞는 것도 가능
+fun mix(c1: Color, c2: Color) =
+    when (setOf(c1, c2)) {
+        setOf(RED, YELLOW) -> ORANGE
+        else -> throw Exception("Dirty color")
+    }
+
+//인자 없는 when도 사용가능
+when {
+    (c1 == RED && c2 == YELLOW) ||
+    (c1 == YELLOW && c2 == RED) ->
+    ORANGE
+}
+```
+
+
+##### 스마트 캐스트 : 타입 검사와 타입 캐스트를 조합
+
+```kotlin
+interface Expr
+class Num(val value: Int) : Expr
+class Sum(val left: Expr, val right: Expr) : Expr
+
+fun eval(e: Expr): Int {
+    if (e is Num) {
+        val n = e as Num
+        return n.value
+    }
+    if (e is Sum) {
+        return eval(e.right) + eval(e.left) // 자동 변환 되었음
+    }
+    throw IllegalArgumentException("Unknown expression")
+}
+//리팩토링
+fun eval(e: Expr): Int =
+    if (e is Num) {
+        e.value
+    } else if (e is Sum) {
+        eval(e.right) + eval(e.left)
+    } else {
+        throw IllegalArgumentException("Unknown expression")
+    }
+//when 사용한 리팩토링
+fun eval(e: Expr): Int =
+    when (e) {
+        is Num ->
+            e.value
+        is Sum ->
+            eval(e.right) + eval(e.left)
+        else ->
+            throw IllegalArgumentException("Unknown expression")
+    }
+
+fun evalWithLogging(e: Expr): Int =
+    when (e) {
+        is Num -> {
+            println("num: ${e.value}")
+            e.value
+        }
+        is Sum -> {
+            val left = evalWithLogging(e.left)
+            val right = evalWithLogging(e.right)
+            println("Sum: $left + $right")
+            left + right
+        }
+        else -> throw IllegalArgumentException("Unknown Expression")
+    }
+//블록의 마지막 식이 결과라는 규칙은 블록이 값을 만들어내야 하는 경우 항상 성립
+```
+
+코틀린은 is 를 사용해 변수 타입을 검사
+
+e is Num
+
+e is Sum
+
+> 스마트캐스트
+> is로 검사하고 나면 굳이 변수를 원하는 타입으로 캐스팅하지 않아도 마치 처음부터 그 변수가 원하는 타입으로 선언된 것처럼 사용할 수 있다.
+
+
+
+#### 2.4 대상을 이터레이션: while과 for 루프
+
+while은 자바와 동일, for은 for-each만 존재 for <아이템> in <원소들>
+
+##### 2.4.2 수에 대한 이터레이션: 범위와 수열
+
+```kotlin
+fun fizzBuzz(i: Int) = when {
+    i % 15 == 0 -> "FizzBuzz "
+    i % 3 == 0 -> "Fizz "
+    i % 4 == 0 -> "Buzz "
+    else -> "$i "
+}
+
+fun main(args: Array<String>) {
+    for (i in 1..100) {
+        print(fizzBuzz(i))
+    }
+
+    for  (i in 100 downTo 1 step 2) {
+        print(fizzBuzz(i))
+    }
+}
+
+//..은 끝 값을 포함 until size를 사용하면 size-1까지 가능
+```
+
+
+
+##### 2.4.3 맵에 대한 이터레이션
+
+```kotlin
+import java.util.*
+
+fun main(args: Array<String>) {
+    val binaryReps = TreeMap<Char, String>() //키에대해 정렬
+    for (c in 'A'..'F') {
+        val binary = Integer.toBinaryString(c.toInt())
+        binaryReps[c] = binary
+    }
+
+    for ((letter, binary) in binaryReps) {
+        println("$letter = $binary")
+    }
+
+    val list = arrayListOf("10", "11", "1001")
+    for ((index, element) in list.withIndex()) {
+        println("${index+1}: $element")
+    }
+
+    println(isLetter('q'))
+    println(isNotDigit('x'))
+    println(recognize('8'))
+}
+
+fun isLetter(c: Char) = c in 'a'..'z' || c in 'A'..'Z'
+
+fun isNotDigit(c: Char) = c !in '0'..'9'
+
+fun recognize(c: Char) = when (c) {
+    in '0'..'9' -> "It's a digit!"
+    in 'a'..'z', in 'A'..'Z' -> "It's a letter!"
+    else -> "I don't know"
+}
+```
+
+```kotlin
+println("Kotlin" in "Java".."Scala") // true
+println("Kotlin" in setOf("Java", "Scala")) // false
+```
+
+
+
+#### 2.5 코틀린의 예외 처리
+
+```kotlin
+import java.io.BufferedReader
+import java.io.StringReader
+
+fun main(args: Array<String>) {
+    val percentage = 10
+    if (percentage !in 0..100) {
+        throw IllegalArgumentException(
+            "A percentage value must be between 0 and 100: $percentage"
+        )
+    }
+
+    val number = 10
+    val percentage2 =
+        if (number in 0..100)
+            number
+        else
+            throw IllegalArgumentException(
+                "A percentage value must be between 0 and 100: $number"
+            )
+
+    val reader = BufferedReader(StringReader("239"))
+    println(readNumber(reader))
+
+    val reader2 = BufferedReader(StringReader("not a number"))
+    readNumber(reader2)
+}
+
+/* 예외 발생시 값을 반환하지 않음 + 다음 println을 실행하지 않음
+fun readNumber(reader: BufferedReader) {
+    val number = try {
+        Integer.parseInt(reader.readLine())
+    } catch (e: NumberFormatException) {
+        return
+    }
+    println(number)
+}
+*/
+
+fun readNumber(reader: BufferedReader): Int? {
+    try {
+        val line = reader.readLine()
+        Integer.parseInt(line)
+    } catch (e: NumberFormatException) {
+        null
+    } finally {
+        reader.close()
+    }
+}
+
+```
+
+> 코틀린은 unchecked Exception과 checked Exception을 구별하지 않음
+>
+> try-with-resource는 문법 제공하지 않지만 라이브러리 함수로 같은 기능을 구현함
