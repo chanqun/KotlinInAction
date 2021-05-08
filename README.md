@@ -1,6 +1,16 @@
 # Kotlin In Action
 
+## 목차
 
+[1. 코틀린이란 무엇이며, 왜 필요한가?](#1.-코틀린이란-무엇이며, 왜-필요한가?)
+
+[2. 코틀린 기초](#2.-코틀린-기초)
+
+[3. 함수 정의와 호출](#3.-함수-정의와-호출)
+
+### 
+
+#### 
 
 ### 1. 코틀린이란 무엇이며, 왜 필요한가?
 
@@ -592,3 +602,146 @@ fun main(args: Array<String>) {
 
 ##### 3.2.3 정적인 유틸리티 클래스 없애기: 최상위 함수와 프로퍼티
 
+자바에서는 특별한 상태나 인스턴스를 메소드는 없는 클래스가 생격난다. Util 클래스 같은
+
+```kotlin
+@file:JvmName("StringFunctions")
+package strings
+fun joinToString(...) : String {...}
+```
+
+최상위 프로퍼티도 접근자 메소드를 통해 자바 코드에 노출 -> const 사용
+
+```kotlin
+const val UNIX_LINE_SEPERATOR ="\n"
+=> public static final String UNIX_LINE_SEPERATOR ="\n"
+```
+
+
+
+#### 3.3 메소드를 다른 클래스에 추가 : 확장 함수와 확장 프로퍼티
+
+확장 함수는 어떤 클래스의 멤버 메소드인 것처럼 호출할 수 있찌만 그 클래스의 밖에 선언된 함수이다.
+
+```kotlin
+package strings 
+fun String.lastChar() : Char = this.get(this.length - 1)
+//   ^ receiver type            ^ reveiver object
+
+char c = StringUtilKt.lastChar("Java")
+//로 쓸 수 있음
+```
+
+##### 3.3.1 임포트와 확장 함수
+
+다음과 같은 방법으로 import해서 사용할 수 있음
+
+```kotlin
+import strings.lastChar
+import strings.*
+import strings.lastChar as last
+```
+
+##### 3.3.3. 확장 함수로 유틸리티 함수 정의
+
+```kotlin
+import java.lang.StringBuilder
+
+fun <T> Collection<T>.joinToString(
+    seperator: String = ", ",
+    prefix: String = "(",
+    postfix: String = ")"
+): String {
+    val result = StringBuilder(prefix)
+
+    for ((index, element) in this.withIndex()) {
+        if (index > 0) result.append(seperator)
+        result.append(element)
+    }
+    result.append(postfix)
+    return result.toString()
+}
+//list Collection이 아니라 불가능
+```
+
+##### 3.3.4 확장 함수는 오버라이드 할 수 없다.
+
+> 실행 시점에 객체 타입에 따라 동적을 호출될 대상 메소드를 결정하는 방식을 동적 디스패치(dynamic dispatch)라 한다.
+>
+> 정적은 컴파일 시점, 동적은 실행 시점
+
+하지만 확장 함수는 클래스의 일부가 아님!
+
+- 수신 객체로 지정한 변수의 정적 타입에 의해 어떤 확장 함수가 호출될지 결정되지, 그 변수에 저장된 객체의 동적인 타입에 의해 확장 함수가 결정되지 않는다.
+
+```kotlin
+fun View.showOff() = println("I'm a view!")
+fun Button.showOff() = println("I'm a view!")
+
+val view: View = Button()
+view.showOff()
+
+//I'm a view
+```
+
+
+
+##### 3.3.5 확장 프로퍼티
+
+```kotlin
+var StringBuilder.lastChar: Char
+    get() = get(length - 1)
+    set(value: Char) {
+        this.setCharAt(length - 1, value)
+    }
+
+fun main(args: Array<String>) {
+    val sb = StringBuilder("Kotlin?")
+    println(sb.lastChar)
+}
+```
+
+
+
+#### 3.4 컬렉션 처리 : 가변 길이 인자, 중위 함수 호출, 라이브러리 지원
+
+- varage
+
+  : 호출 시 인자 개수가 달라질 수 있는 함수를 정의할 수 있다.
+
+- infix
+
+  : 인자가 하나뿐인 메소드를 간편하게 호출
+
+- destruction declaration
+
+  : 복합적인 값을 분해해서 여러 변수에 나눠 담을 수 있다.
+
+
+
+##### 3.4.2 가변 인자 함수: 인자의 개수가 달라질 수 있는 함수 정의
+
+> 자바에서는 배열 구문이 들어오면 그냥 넘기지만 kotlin에서는 spread연산을 함
+
+```kotlin
+val list = listOf("args: ", *args)
+println(list)
+```
+
+##### 3.4.3 값의 쌍 다루기: 중위 호출과 구조 분해 선언
+
+```kotlin
+//맵을 만들었을때
+val map = mapOf(1 to "one", 2 to "two")
+
+infix fun Any.to(other: Any) = Pair(this, other)
+val (number, name) = 1 to "one" //이런 기능을 구조 분해 선언이라함
+
+for((index, element) in Collection.withIndex()) {
+    println("${index}: ${element}")
+} //구조분해함수 였음
+```
+
+
+
+#### 3.5 문자열과 정규식 다루기
