@@ -3,10 +3,9 @@
 ## 목차
 
 [1. 코틀린이란 무엇이며, 왜 필요한가?](#1-코틀린이란-무엇이며-왜-필요한가?)
-
 [2. 코틀린 기초](#2-코틀린-기초)
-
 [3. 함수 정의와 호출](#3-함수-정의와-호출)
+[4. 클래스, 객체, 인터페이스](#4-클래스-객체-인터페이스)
 
 ### 
 
@@ -745,3 +744,131 @@ for((index, element) in Collection.withIndex()) {
 
 
 #### 3.5 문자열과 정규식 다루기
+
+##### 3.5.1 문자열 나누기
+
+```kotlin
+println("12.345-6.A".split("\\.|-".toRegex()))
+println("12.345-6.A".split(".", "-"))
+```
+
+##### 3.5.2 정규식과 3중 따옴표로 묶은 문자열
+
+경로 파싱
+
+```kotlin
+fun parsePath(path: String) {
+	val directory = path.substringBeforeLast("/")
+    val fullName = path.substringAfterLast("/")
+
+	val fileName = fullName.substringBeforeLast(".")
+    val extension = fullName.substringAfterLast(".")
+    
+    println("Dir: $directory, name: $fileName, ext: $extension")
+}
+```
+
+> kotlin에서 3중 따움표 문자열을 사용하면 어떤 문자도 이스케이프할 필요가 없다.
+
+```kotlin
+fun parsePathRegx(path: String) {
+	val regex = """(.+)/(.+)\.(.+)""".toRegex()
+ 
+    val matchResult = regex.matchEntire(path)
+    if (matchResult != null) {
+        val (directory, filename, extension) = matchResult.destructured //구조분해    
+        println("Dir: $directory, name: $filename, ext: $extension")
+    }
+}
+// 따로 지정하지 않으면 정규식 엔진은 가장 긴 부분 문자열과 매치하려고 시도 - lazy greedy
+```
+
+> 3중 문자열을 사용하면 escape 없이 그대로 들어간다.
+>
+> 하지만 3중 문자열에 $를 넣어야한다면 '$' 로 사용해야한다. 소스를 더 보기 좋게하려면 trimMargin("")
+
+
+
+#### 3.6 코드 다듬기: 로컬 함수와 확장
+
+> 많은 개발자들이 좋은 코드의 중요한 특징 중 하나가 중복이 없는 것이라 믿는다.
+> DRY (Don't Repeat Yourself) 하지만 메소드 추출로 너무 많이 나누면 메소드가 많아지고 관계가 파악하기 힘들어진다.
+
+- 코틀린은 함수에서 추출한 함수를 원 함수에 내부에 중첩시킬 수 있다.!!!
+
+```kotlin
+class User(val id: Int, val name: String, val address: String)
+
+//1. 코드 중복이 있는 예제
+fun saveUser(user: User) {
+    if (user.name.isEmpty()) {
+        throw IllegalArgumentException("Can't save user ${user.id}: empty Name")
+    }
+
+    if (user.address.isEmpty()) {
+        throw IllegalArgumentException("Can't save user ${user.id}: empty Address")
+    }
+    // user를 데이터베이스에 저장한다.
+}
+
+//2. 로컬 함수를 사용 코드 중복 줄이기
+fun saveUser(user: User) {
+    fun validate(
+        user: User,
+        value: String,
+        fieldName: String
+    ) {
+        if (value.isEmpty()) {
+            throw IllegalArgumentException(
+                "Can't save user ${user.id}: empty ${fieldName}"
+            )
+        }
+    }
+
+    validate(user, user.name, "Name") 
+    validate(user, user.address, "Address")
+    // user를 데이터베이스에 저장한다.
+}
+
+//3. user.name이 아니고 바깥 함수에 파라미터를 변수로 사용 가능
+fun saveUser(user: User) {
+    fun validate(value: String, fieldName: String) {
+        if (value.isEmpty()) {
+            throw IllegalArgumentException(
+                "Can't save user ${user.id}: empty ${fieldName}"
+            )
+        }
+    }
+    validate(user.name, "Name")
+    validate(user.address, "Address")
+}
+
+//4. 확장 함수로 추출
+fun User.validateBeforeSave() {
+    fun validate(value: String, fieldName: String) {
+        if (value.isEmpty()) {
+            throw IllegalArgumentException("Can't save user ${id}: empty ${fieldName}")
+        }
+    }
+
+    validate(name, "Name")
+    validate(address, "Address")
+    // user를 데이터베이스에 저장한다.
+}
+
+fun saveUser(user: User) {
+    user.validateBeforeSave()
+    // user를 데이터베이스에 저장한다.
+}
+
+
+fun main() {
+    saveUser(User(1, "", ""))
+}
+```
+
+>! 중첩된 함수의 깊이가 깊어지면 코드를 읽기가 어려워지므로 한 단계만 중첨시키는 것을 권장
+
+
+
+### 4. 클래스, 객체, 인터페이스
