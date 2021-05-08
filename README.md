@@ -524,3 +524,71 @@ fun readNumber(reader: BufferedReader): Int? {
 > 코틀린은 unchecked Exception과 checked Exception을 구별하지 않음
 >
 > try-with-resource는 문법 제공하지 않지만 라이브러리 함수로 같은 기능을 구현함
+
+
+
+### 3. 함수 정의와 호출
+
+#### 3.1 코틀린에서 컬렉션 만들기
+
+```kotlin
+//set
+val set = hashSetof(1, 7, 53)
+//list
+val list = arrayListOf(1, 7, 53)
+//map - to는 일바 함수이다.
+val map = hashMapOf(1 to "one", 7 to "seven", 53 to "fifty-three")
+```
+
+> getClass를 확인해보면 표준 java class인 것을 확인할 수 있음
+
+코틀린은 자바 컬렉션과 똑같은 클래스지만 더 많은 기능을 쓸 수 있음
+
+```kotlin
+val strings = listOf("first", "second", "third")
+println(strings.last())
+
+val numbers = listOf(1, 14, 2)
+println(numbers.max())
+```
+
+
+
+#### 3.2 함수를 호출하기 쉽게 만들기
+
+toString을 (1; 2; 3) 같이 만들고 싶을 때 예제
+
+```kotlin
+import java.lang.StringBuilder
+
+fun <T> joinToString(
+    collection: Collection<T>,
+    seperator: String = ", ", //코틀린은 디폴트 값을 지정할 수 있음
+    prefix: String = "",
+    postfix: String = ""
+    ) : String {
+    val result = StringBuilder(prefix)
+
+    for((index, element) in collection.withIndex()) {
+        if(index > 0) result.append(seperator)
+        result.append(element)
+    }
+    result.append(postfix)
+    return result.toString()
+}
+
+fun main(args: Array<String>) {
+    val list = listOf(1, 2, 3)
+    println(joinToString(list, "; ", "(", ")"))
+    
+    //코틀린에서는 인자 중 일부의 이름을 명시할 수 있는데 명시하면 그 뒤에 인자는 모두 이름을 명시
+    println(joinToString(list, seperator = " ", prefix = "(", postfix = ")"))
+}
+```
+
+> 자바에서 이런 기능을 쓰려면 @JvmOverloads 어노테이션을 추가하면 자동으로 맨 마지막 파라미터부터 하나씩 생략한 오버로딩한 자바 메소드를 추가해줌
+
+
+
+##### 3.2.3 정적인 유틸리티 클래스 없애기: 최상위 함수와 프로퍼티
+
