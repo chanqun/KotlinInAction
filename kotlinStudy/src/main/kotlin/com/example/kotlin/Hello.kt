@@ -1,5 +1,8 @@
 package com.example.kotlin
 
-class Hello {
+class Hello(val name: String)
 
+fun main() {
+    val hello = Hello("chanqun")
+    println(hello.name)
 }

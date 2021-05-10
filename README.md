@@ -2,10 +2,15 @@
 
 ## 목차
 
-[1. 코틀린이란 무엇이며, 왜 필요한가?](#1-코틀린이란-무엇이며-왜-필요한가?)	
-[2. 코틀린 기초](#2-코틀린-기초)	
-[3. 함수 정의와 호출](#3-함수-정의와-호출)	
-[4. 클래스, 객체, 인터페이스](#4-클래스-객체-인터페이스)	
+[1. 코틀린이란 무엇이며, 왜 필요한가?](#1-코틀린이란-무엇이며-왜-필요한가?)
+
+[2. 코틀린 기초](#2-코틀린-기초)
+
+[3. 함수 정의와 호출](#3-함수-정의와-호출)
+
+[4. 클래스, 객체, 인터페이스](#4-클래스-객체-인터페이스)
+
+​	
 
 ### 
 
@@ -872,3 +877,178 @@ fun main() {
 
 
 ### 4. 클래스, 객체, 인터페이스
+
+코틀린 클래스와 인터페이스는 기본적으로 final이며 public
+
+> 싱글턴 클래스, 동반 객체(companion object), 객체 식(object expression)을 표현할 때 object 키워드를 쓴다.
+
+#### 4.1 클래스 계층 정의
+
+sealed는 클래스 상속을 제한
+
+##### 4.1.1 코틀린 인터페이스
+
+```kotlin
+interface Clickable {
+	fun click()
+    fun showOff() = println("I'm clickable!") //default 구현
+}
+
+class Button : Clickable { //kotlin에서는 이것만으로 상속이 됨
+    //override 변경자 필수!
+    override fun click() = println("I was clicked")
+}
+```
+
+```kotlin
+package com.example.kotlin
+
+class Button : Clickable, Focusable{
+    override fun click() = println("I was clicked")
+    override fun showOff() {
+        super<Clickable>.showOff()//부모상속
+        super<Focusable>.showOff()
+    }
+}
+```
+
+
+##### 4.1.2 open, final, abstract 변경자 : 기본적으로 final
+
+상속을 위한 설계와 문서를 갖추거나, 그럴 수 없다면 상속을 금지하라!
+
+코틀린의 클래스와 메소드는 기본적으로 final 상속을 허용하려면 open 변경자를 붙여야 한다.
+
+- 오버라이드 금지 final을 붙임
+
+```kotlin
+final override fun click() {}
+```
+
+interface는 자동 abstract
+
+>final : 오버라이드할 수 없음 : 클래스 멤버의 기본 변경자
+>
+>open : 오버라이드할 수 있음 : 반드시 open을 명시해야 오버라이드할 수 있음
+>
+>abstract : 반드시 오버라이드 : 추상 클래스의 멤버에만 이 변경자를 붙일 수 있다
+>
+>override : 상위 클래스나 상위 인스턴스의 멤버를 오버라이드 하는 중 : 오버라이드하는 멤버는 기본적으로 열려있음 하위 클래스의 오버라이드를 금지하려면 final을 명시
+
+>변경자 : 클래스 멤버 : 최상위 선언
+>
+>public 기본 가시성 : 모든 곳 : 모든 곳에서 볼 수 있음
+>
+>internal : 같은 모듈 : 같은 모듈
+>
+>protected : 하위 클래스 안에서만 : (최상위 선언에 적용할 수 없음)
+>
+>private : 같은 클래스 안에서만 볼 수 있음 : 같은 파일 안에서만 볼 수 있음
+
+##### 4.1.4 내부 클래스와 중첨된 클래스
+
+nested class는 명시적으로 요청하지 않는 한 바깥쪽 클래스 인스턴스에 대한 접근 권한이 없음
+
+자바에서는 static을 붙여야 바깥쪽 클래스 참조가 사라지지만 
+kotlin은 반대다 inner을 붙여야 바깥쪽 클래스를 참조한다.
+
+```kotlin
+class Outer {
+	inner class Inner {
+		fun getOuterReference(): Outer = this@Outer
+	}
+}
+```
+
+##### 4.1.5 봉인된 클래스
+
+코틀린 컴파일러는 when을 사용해 Expr 타입의 검사할 때 꼭 디폴트 분기인 else분기를 추가
+하지만 이렇게 되면 디폴트 분기가 선택되기 때문에 심각한 버그가 발생할 수 있음
+
+! sealed class를 이용한다면 default 분기가 필요 없음 -> sealed class는 자동으로 open임
+
+
+
+#### 4.2 뻔하지 않은 생성자와 프로퍼티를 갖는 클래스 선언
+
+주생성자 부생성자가 있으며 초기화 블록이 있다.
+
+##### 4.2.1 클래스 초기화: 주 생성자와 초기화
+
+ ```kotlin
+class User(_nickname: String) {
+    val nickname = _nickname
+}
+
+class User(val nickName: String, val isSubscribed: Boolean = true)
+val chan = User("찬훈")
+println(chan.isSubscribed) // true
+ ```
+
+```kotlin
+open class Button
+
+class RadioButton : Button() 
+//클래스의 생성자를 호출해야함
+//interface는 없어도 됨
+```
+
+##### 4.2.2 부 생성자
+
+부 생성자는 constructor 키워드로 시작
+
+```kotlin
+class MyButton : View {
+	constructor(ctx: Context) : this(ctx, MY_STYLE) {
+		//다른 생성자에게 생성을 위임
+	}
+}
+```
+
+##### 4.2.3 인터페이스에 선언된 프로퍼티 구현
+
+```kotlin
+interface User {
+	val nickname: String
+}
+
+class PrivateUser(override val nickname: String) : User
+class SubscribingUser(val email: String) : User {
+    override val nickname: String
+    	get() = email.substringBefore('@')
+}
+class FackbookUser(val accountId: Int) {
+    override val nickname = getFacebookName(accountId)
+}
+```
+
+##### 4.2.4 게터와 세터에서 뒷받침하는 필드에 접근
+
+getter에서는 field값을 읽을 수만 있고 세터에서는 field 값을 읽거나 쓸 수 있음
+
+```kotlin
+class User(val name:String ){
+	var address: String = "unspecified"
+		set(value: String) {
+			println("""
+				Address was changed for $name:
+				"$field" -> "$value".""".trimIndent())
+            field = value
+		}
+}
+```
+
+##### 4.2.5 접근자의 가시성 변경
+
+counter을 내부에서만 바뀌도록 한 것이다.
+
+```kotlin
+class LengthCounter {
+	var counter: Int = 0
+		private set
+    fun addWord(word: String) {
+    	coutner += word.length
+    }
+}
+```
+
