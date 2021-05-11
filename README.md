@@ -10,11 +10,9 @@
 
 [4. 클래스, 객체, 인터페이스](#4-클래스-객체-인터페이스)
 
+[5. 람다로 프로그래밍](#5-람다로-프로그래밍)
+
 ​	
-
-### 
-
-#### 
 
 ### 1. 코틀린이란 무엇이며, 왜 필요한가?
 
@@ -1052,3 +1050,144 @@ class LengthCounter {
 }
 ```
 
+#### 4.3 컴파일러가 생성한 메소드 : 데이터 클래스와 클래스 위임
+
+toString(), equals(), hashCode()
+
+```kotlin
+class Client(val name: String, val postalCode: Int) {
+	override fun toString() = "Cliend(name=$name, postalCode=$postalCode)"
+    
+    override fun equals(other: Any?) : Boolean {
+        if (other == null || other !is Client)
+    		return false
+    	return name == other.name &&
+    		postalCode == other.postalCode
+    }
+
+    override fun hashCode(): Int = name.hashCode() * 31 + postalCode
+}
+```
+
+- 코틀린에서는 ==가 내부적으로 equals를 호출해서 객체를 비교 참조 비교는 ===
+
+-> 복잡하다 코틀린 컴파일러는 이 모든 메소드를 자동으로 생성해준다.
+
+
+
+##### 4.3.2 데이터 클래스 : 모든 클래스가 정의해야 하는 메소드 자동 생성
+
+data class로 만들면 전부 해결
+
+copy()메소드도 제공해준다.
+
+```kotlin
+data class Client(val name: String, val postalCode: Int)
+```
+
+##### 4.3.3 클래스 위임: by 키워드 사용
+
+데코레이터 패턴: 상속을 허용하지 않는 클래스에 새로운 동작을 추가할때 사용
+
+collection만 구현하려해도 많은 코드가 필요 이런 위임을 **일급 시민 기능**으로 지원
+
+> 일급 객체? 코틀린 함수는 1급 시만
+>
+> - 파라미터로 전달할 수 있다.
+>
+> - 반환값으로 사용할 수 있다.
+> - 변수나 데이터 구조 안에 담을 수 있따.
+> - 할당에 사용된 이름과 관계없이 고유한 구별이 가능하다.
+
+```kotlin
+class DelegatingCollection<T>(
+	innerList: Collection<T> = ArrayList<T>()
+) : Collection<T> by innerList()
+```
+
+```kotlin
+class CountingSet<T>(
+	val innerSet : MutableCollection<T> = HashSet<T>()
+) : MutableCollection<T> by innserSer(
+	var objectsAdded = 0
+	override fun add(element: T): Boolean {
+		objectsAdded++
+		return innerSet.add(element)
+	}
+	override fun addAll(c: Collection<T>): Boolean {
+		ovjectsAdded += c.size
+		return innerSet.addAll(c)
+	}
+)
+```
+
+
+
+#### 4.4 object 키워드 : 클래스 선언과 인스턴스 생성
+
+- object declaration은 싱글턴을 정의하는 방법 중 하나
+
+- 동반 객체는 인스턴스 메소드는 아니지만 어떤 클래스와 관련 있는 메소드와 팩토리 메소드를 담을 때 쓰임
+- 객체 식은 자바의 무명 내부 클래스 대신 쓰인다.
+
+##### 4.4.1 객체 선언: 싱글턴을 쉽게 만들기
+
+> 정적인 필드에 그 클래스의 유일한 객체를 저장하는 싱글턴 패턴
+
+일반 클래스 인스턴스와 달리 **싱글턴 객체는 객체 선언문이 있는 위치에서 생성자 호출 없이 즉시 만들어지므로** 생성자 정의가 필요 없다.
+
+- 중첩 객체를 사용한 Comparator
+
+```kotlin
+data class Person(val name: String) {
+	object NameComparator : Comparator<Person> {
+		override fun compare(p1: Person, p2: Person): Int = 
+			p1.name.compareTo(p2.name)
+	}
+}
+```
+
+
+
+##### 4.4.2 동반 객체 : 팩토리 메소드와 정적 멤버가 들어갈 장소
+
+**클래스의 인스턴스와 관계없이 호출해야 하지만 클래스 내부 정보에 접근해야 하는 함수가 필요할 때는 클래스에 중첩된 객체 선언의 멤버 함수로 정의해야 함**
+
+```kotlin
+//JSON 직렬화
+class Person(val name: String) {
+	companion object Loader {
+		fun fromJSON(jsonText: String): Person = ...
+	}
+}
+//동반 객체에서 인터페이스 구현
+interface JSONFactory<T> {
+    fun fromJSON(jsonText: String): T
+}
+
+class Person(val name: String) {
+    companion object : JSONFactory<Person> {
+        override fun fromJSON(jsonText: String) : Person...
+    }
+}
+```
+
+```kotlin
+class Person(val firstName: String, val lastName: String) {
+	companion object {
+	
+	}
+}
+//확장 함수 선언
+fun Person.Companion.fromJSON(json: String): Person {
+
+}
+```
+
+##### 4.4.5 객체 식: 무명 내부 클래스를 다른 방식으로 작성
+
+
+
+### 5. 람다로 프로그래밍
+
+> lamda expression 또는 람다는 기본적으로 다른 함수에 넘길 수 있는 작은 코드 조각을 뜻함

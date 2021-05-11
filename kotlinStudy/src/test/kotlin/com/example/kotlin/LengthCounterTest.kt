@@ -8,7 +8,6 @@ internal class LengthCounterTest {
     fun getLengthCount() {
         val lengthCounter = LengthCounter()
         lengthCounter.addWord("Hello")
-
         assertEquals(5, lengthCounter.counter)
     }
 }
