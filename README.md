@@ -1191,3 +1191,113 @@ fun Person.Companion.fromJSON(json: String): Person {
 ### 5. 람다로 프로그래밍
 
 > lamda expression 또는 람다는 기본적으로 다른 함수에 넘길 수 있는 작은 코드 조각을 뜻함
+
+##### 5.1.1 람다 소개: 코드 블록을 함수 인자로 넘기기
+
+함수형 프로그래밍에서는 함수를 값처럼 다루는 접근 방법을 사용
+```kotlin
+button.setOnClickListener { }
+```
+
+##### 5.1.2 람다와 컬렉션
+
+```kotlin
+people.maxBy(Person::age)
+```
+
+##### 5.1.3 람다 식의 문법
+
+- 코틀린에는 함수 호출 시 맨 뒤에 있는 인자가 람다 식이라면 그 람다를 괄호 밖으로 빼낼 수 있다.
+- 람다가 어떤 함수의 유일한 인자이고 괄호 뒤에 람다를 썼다면 호출 시 빈 괄호를 없애도 된다.
+
+```kotlin
+people.maxBy() { p: Person -> p.age }
+people.maxBy { p: Person -> p.age }
+```
+- 람다의 파라미터가 하나뿐이고 그 타입을 컴파일러가 추론할 수 있는 경우 it을 바로 쓸 수 있다.
+
+##### 5.1.4 현재 영역에 있는 변수에 접근
+
+람다 안에서는 파이널 변수가 아닌 변수에 접근할 수 있다. 또한 람다 안에서 바깥의 변수(포획한:capture 변수)를 변경해도 된다.
+-> 래퍼에 대한 참조를 람다 코드와 저장함
+
+##### 5.1.5 멤버 참조
+::를 사용하는 식을 멤버 참조라고 부른다
+최상위에 선언된 함수나 프로퍼티를 참조할 수 있음
+
+#### 5.2 컬렉션 함수형 API
+함수형 프로그래밍 스타일을 사용하면 컬렉션을 다룰 때 편리
+
+##### 5.2.1 필수적인 함수: filter와 map
+
+filter 함수는 컬렉션에서 원치 않은 변수를 제거하지만 변환 할 수 없다.
+```kotlin
+val list = listOf(1, 2, 3, 4)
+println(list.filter { it % 2 == 0 }
+```
+
+map 함수는 주어진 람다를 컬렉션의 각 원소에 적용한 결과를 모아 새 컬렉션을 만든다.
+```kotlin
+val list = listOf(1, 2, 3, 4)
+println(list.map { it * it })
+```
+
+가장 나이 많은 사람 출력하기
+```kotlin
+//계속 최댓값 연산을 함
+people.filter { it.age == people.maxBy(Person::age)!!.age }
+
+//필요없는 계산을 반복하지 말자
+val maxAge = people.maxBy(Person::age)!!.age
+people.filter { it.age == maxAge }
+```
+- map의 경우는 mapKeys, filterKeys를 이용해 키를 다루고 mapValues 와 filterValues를 이용해 value를 다룬다.
+
+##### 5.2.2 all, any, count, find: 컬렉션에 술어 적용
+
+all 모두 만족하는지 any 만족하는 것이 있는지
+count는 만족하는 개수 find(firstOrNull) 함수는 첫 번째 원소 (없으면 null)
+```kotlin
+val canBeInClub27 = { p: Person -> p.age <=27 }
+
+val people = listOf(Person("Alice", 27), Person("Bob", 31))
+println(people.all(canBeInClub27)) //false
+println(people.any(canBeInClub27)) //true
+println(people.count(canBeInClub27)) //1
+```
+-> filter을 사용할 수 있지만 중간 컬렉션이 생김
+
+##### 5.2.3 groupBy:리스트를 여러 그룹으로 이뤄진 맵으로 변경
+```kotlin
+people.groupBy { it.age }
+```
+
+##### 5.2.3 flatMap과 flatten: 중첩된 컬렉션 안의 원소 처리
+```kotlin
+val strings = listOf("abc", "def")
+println(strings.faltMap { it.toList() })
+[a, b, c, d, e, f]
+```
+> 특별히 변환할 내용이 없으면 flatten() 사용
+
+#### 5.3 지연 계산(lazy) 컬렉션 연산
+
+```kotlin
+people.map(Person::name).filter { it.startsWith("A") } //계산 중간 결과를 계속 컬렉션에 담게 된다.
+
+people.asSequence() //원본 컬렉션을 시퀀스로 만든다.
+	.map(Person::name) 
+	.filter { it.startsWith("A") }
+	.toList() //iterator로 읽는 경우는 좋지만 인덱스로 접근하는 것이 빠른 경우는 다시 리스트로
+```
+
+##### 5.3.1 시퀀스 연산 실행 : 중간 연산과 최종 연산
+위에서 toList()로 결과가 필요할 떄 연산이 진행된다. lazy 연산
+
+##### 5.3.2 시퀀스 만들기
+```kotlin
+val naturealNumbers = generateSequence(0) { it + 1 }
+vla numbesTo100 = naturalNumbers.takeWhile { it <= 100 }
+println(numberTo100.sum())
+```
+
