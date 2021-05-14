@@ -1359,5 +1359,390 @@ fun alphabet(): StringBuilder().apply {
 ```
 - buildString은 StringBuilder객체를 만드는 일과 toString을 호출해주는 일을 알아서 해준다. 
 
+
+
 ### 6. 코틀린 타입 시스템
+
+
+
+#### 6.1 널 가능성
+
+코틀린을 비롯한 최신 언어에서 null에 대한 접근 방법은 가능한 한 이 문제를 실행 시점에서 컴파일 시점으로 옮긴다.
+
+
+
+##### 6.1.1 널이 될 수 있는 타입
+
+```kotlin
+fun strLen(s: String) = s.length //null이 될 수 없음
+fun strLen(s: String?) = s.length //null이 될 수 있음
+
+fun strLenSafe(s: String?): Int = 
+	if (s != null) s.length else 0
+//null검사를 추가하면 코드가 컴파일 된다.
+```
+
+- 널이 됫 수 있는 값을 널이 될 수 없는 타입의 변수에 대입할 수 없다.
+
+
+
+##### 6.1.2 타입의 의미
+
+String과 null은 가능한 연산이 다름
+
+
+
+##### 6.1.3 안전한 호출 연산자: ?.
+
+> s?.toUpperCase()   ==  if (s != null) s.toUpperCase() else null
+
+
+
+```kotlin
+//안전한 호출 연쇄
+fun Person.countryName(): String {
+	val country = this.company?.address?.country
+	return if (country != null) counry else "Unknown"
+}
+```
+
+##### 6.1.4 엘비스 연산자: ?:
+
+이 연산자는 이항 연산자로 좌항을 계산한 값이 널인지 검사
+
+```kotlin
+fun strLenSafe(s: String?): Int = s?.length ?: 0
+
+fun Person.countryName() = company?.address?.country ?: "Unknown"
+```
+
+- kotlin 에서는 return throw도 식이므로 우항에 넣을 수 있다.
+
+```kotlin
+fun printShippingLabel(person: Person) {
+    val address = person.company?.address
+    	?: throw IllegalArgymentException("No address")
+    with (address) {
+        println(streetAddress)
+        println("$zipCode $city, $country")
+    }
+}
+```
+
+
+
+##### 6.1.5 안전한 캐스트: as?
+
+as로 지정한 타입으로 바꿀 수 없으면 ClassCastException 발생
+
+```kotlin
+class Person(val firstName: String, val lastName: String) {
+    override fun equals(o: Any?): Boolean {
+        val otherPerson = o as? Person ?: return false
+        return otherPerson.firstName == firstName &&
+        	otherPerson.lastName == lastName
+    }
+}
+```
+
+
+
+##### 6.1.6 널 아님 단언: !!
+
+```kotlin
+fun ignoreNulls(s: String?) {
+    val sNotNull: String = s!!
+    println(sNotNull.length)
+}
+```
+
+!!는 어디서 null이 나타났는지 알기 위해 한 번에 쓰지 말자
+
+```kotlin
+person.company!!.address!!.country
+```
+
+
+
+##### 6.1.7 let 함수
+
+```kotlin
+fun sendEmailTo(email: String)
+
+val email: String? =
+sendEmailTo(email) //널이 될 수 있는 email을 넘길 수 없음
+
+email?.let { email -> sendEmailTo(email) }
+email?.let { sendEmailTo(it) }
+```
+
+
+
+##### 6.1.8 나중에 초기화할 프로퍼티
+
+나중에 초기화하는 프로퍼티는 항상 var이어야 한다.
+
+
+
+##### 6.1.9 널이 될 수 있는 타입 확장
+
+```kotlin
+fun verifyUserInput(input: String?) {
+    if (input.isNullOrBlank()) {
+        println("Please fill in the required fields")
+    }
+}
+// isNullOrEmpty
+```
+
+null이면 true 아니면 isBlank() 실행
+
+
+
+##### 6.1.10 타입 파라미터의 널 가능성
+
+널이 될 수 있는 타입을 표시하려면 반드시 물음표를 붙여야 하는 것에 예외
+
+```kotlin
+fun <T> printHashCode(t: T) {
+    println(t?.hashCode())
+} //기본적으로 null 받을 수 있음
+
+fun <T: Any> printHashCode(t: T) {
+    println(t.hashCode())
+} //null 받을 수 없음
+```
+
+
+
+##### 6.1.11 널 가능성과 자바
+
+플랫폼 타입은 코틀린이 널 관련 정보를 알 수 없는 타입을 말한다.
+
+> Type = Type? or Type
+>
+> 자바     코틀린
+
+자바 API를 다룰 때는 널 관련 애노테이션을 사용하지 않으므로 조심해야한다.
+
+!!! 상속
+
+- 코틀린에서 자바 메소드를 오버라이드 할 때 그 메소드의 파라미터와 반환 타입을 널이 될 수 있는 타입으로 선언할지 널이 될 수 없는 타입으로 선언할지 결정해야함
+
+```kotlin
+class StringPrinter : StringProcessor {
+    override fun process(value: String) {
+        println(value)
+    }
+}
+
+class NullableStringPrinter : StringProcessor {
+    override fun process(value: String?) {
+        if(value != null) {
+			println(value)
+        }
+    }
+}
+```
+
+
+
+#### 6.2 코틀린의 원시 타입
+
+##### 6.2.1 원시 타입 : Int, Boolean 등
+
+코틀린은 int 타입으로 대부분 컴파일 이런 컴파일이 불가능한 경우는 제네릭 클래스를 쓴 경우
+
+java.lang.Integer
+
+
+
+##### 6.2.2 널이 될 수 있는 원시 타입: Int?, Boolean? 등
+
+null 확인 후 비교 가능
+
+JVM은 타입 인자로 원시 타입을 허용하지 않아서 제네릭 클래스는 항상 박스 타입을 사용
+
+
+
+##### 6.2.3 숫자 변환
+
+toByte(), toShort(), toChar() 등 제공
+
+
+
+##### 6.2.4 Any, Any? : 최상위 타입
+
+자바에 Object와 대응 
+
+자바와 마찬가지로 코틀린에서도 원시 타입 값을 Any 타입의 변수에 대입하면 자동으로 값을 객체로 감싼다.
+
+
+
+##### 6.2.5 Unit 타입: 코틀린의 void
+
+Unit 단 하나의 인스턴스만 갖는 타입 유일한 인스턴스의 유무가 java의 void와 구분된다.
+
+##### 6.2.6 Nothing 타입: 이 함수는 결코 정상적을 끝나지 않는다.
+
+fail함수나 무한 루프를 도는 함수에 사용 가능
+
+```kotlin
+fun fail(message: String): Nothing {
+    throw IllegalStateException(message)
+}
+val address = company.address ?: fail("No address")
+```
+
+
+
+#### 6.4 컬렉션과 배열
+
+##### 6.3.1 널 가능성과 컬렉션
+
+List<Int?>는 Int? 타입의 값을 저장 List<Int>? 는 전체가 null일 수 있음
+
+```kotlin
+val validNumbers = numbers.filterNotNull() //
+```
+
+
+
+##### 6.3.2 읽기 전용과 변경 가능한 컬렉션
+
+- 컬렉션에 데이터를 수정하려면 MutableCollection 인터페이스를 사용 // add(), remove(), clear()
+
+읽기 전용 컬렉션이 항상 thread safe하지 않고 다중 스레드 환경에서 데이터를 다루는 경우 그 데이터를 적절히 동기화
+
+
+
+##### 6.3.3 코틀린 컬렉션과 자바
+
+Map과 MutableMap 등 다양함
+
+- 자바는 읽기 전용 컬렉션과 변경 가능 컬렉션을 구분하지 않으므로 , 코틀린에서 읽기 전용으로 선언되 객체라도 자바에서 객체 내용을 변경할 수 있음
+
+
+
+##### 6.3.4 컬렉션을 플랫폼 타입으로 다루기
+
+- 컬렉션이 널이 될 수 있는가?
+- 컬렉션의 원소가 널이 될 수 있는가?
+- 오버라이드하는 메소드가 컬렉션을 변경할 수 있는가?
+
+정해야한다!!!
+
+
+
+##### 6.3.5 객체의 배열과 원시 타입의 배열
+
+- arrayOf 함수에 원소를 넘기면 배열 생성
+- arrayOfNulls 함수에 정수 값을 인자로 넘기면 모든 원소가 null이고 인자로 넘긴 값과 크기가 같은 배열 만들 수 있음
+- Array 생성자는 배열 크기와 람다를 인자로 받아 원소를 초기와 해줌
+
+
+
+```kotlin
+val letters = Array<String>(26) { i -> ('a' + i).toString() }
+
+val strings = listOf("a", "b", "c")
+println("%s/%s/%s".format(*strings.toTypedArray()))
+// a/b/c
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
