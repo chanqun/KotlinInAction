@@ -1301,3 +1301,59 @@ vla numbesTo100 = naturalNumbers.takeWhile { it <= 100 }
 println(numberTo100.sum())
 ```
 
+#### 5.4 자바 함수형 인터페이스 활용
+
+```kotlin
+button.setOnClickListener { view -> ... }
+```
+- OnclickListener에 추상 메소드가 단 하나만 있기 때문에 가능
+- 함수형인터페이스 or SAM(Single abstract method) 인터페이스라고 한다.
+
+
+##### 5.4.1 자바 메소드에 람다를 인자로 전달
+Runnable 인스턴스 
+대부분 자동으로 컴파일러에서 변환
+
+##### 5.4.2 SAM 생성자 : 람다를 함수형 인터페이스로 명시적으로 변경
+오버로드한 메소드 중에서 어떤 타입의 메소드를 선택해 람다를 변환해 넘겨줘야 할지 모호할 때 명시적으로 SAM 생성자를 적용
+
+
+#### 5.5 수신 객체 지정 람다: with와 apply
+
+##### 5.5.1 with함수
+
+```kotlin
+fun alphabet(): String {
+	val stringBuilder = StringBuilder()
+	return with(stringBuilder) {
+		for(letter in 'A'..'Z') {
+			this.append(letter)
+		}
+		append("\nNow I know the alphabet!")
+		this.toString()
+	}
+}
+
+fun alphabet(): with(StringBuilder()) {
+	for(letter in 'A'..'Z') {
+		append(letter)
+	}
+	append("\nNow I know the alphabet!")
+	toString()
+}
+// OuterClass의 toString()을 쓰고 싶다면 this@OuterClass.toString()
+```
+결과값은 마지막 줄이지만 수신 객체가 필요한 경우 apply함수를 사용
+
+##### 5.5.2 apply 함수
+apply함수는 항상 자신에게 전달된 객체를 반환한다
+```kotlin
+
+fun alphabet(): StringBuilder().apply {
+	for(letter in 'A'..'Z') {
+		append(letter)
+	}
+	append("\nNow I know the alphabet!")
+}.toString()
+```
+- buildString은 StringBuilder객체를 만드는 일과 toString을 호출해주는 일을 알아서 해준다. 
