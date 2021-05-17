@@ -15,6 +15,7 @@
 [6. 코틀린 타입 시스템](#6-코틀린-타입-시스템)
 
 
+
 ### 1. 코틀린이란 무엇이며, 왜 필요한가?
 
 #### 1.1코틀릿 맛보기
@@ -1651,9 +1652,28 @@ println("%s/%s/%s".format(*strings.toTypedArray()))
 ```
 
 
+코틀린 특징
+- Functions - definition in package or in class
+- Immutable/mutable variables
+- No "New" keyword
+- Type inference
+- Null Safety
+- Property
+- No cecked exceptions
+- No primitive types
+- No static members
+- No set/get Method
+- No Constructor
+- Concise Class
+- Implicit Return Value
 
+Immutability
+> Built-in support for mutable and immutable variables, properties and fields
+> Keywords var and val
 
-
+Type Inference
+> Primitive Type value uses suffix (L,F)
+> Assignee follow assigner type
 
 
 
