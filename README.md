@@ -14,7 +14,6 @@
 
 [6. 코틀린 타입 시스템](#6-코틀린-타입-시스템)
 
-
 ### 1. 코틀린이란 무엇이며, 왜 필요한가?
 
 #### 1.1코틀릿 맛보기
@@ -1651,95 +1650,72 @@ println("%s/%s/%s".format(*strings.toTypedArray()))
 ```
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+### 2 코틀린답게 사용하기
+
+#### 7 연산자 오버로딩과 기타 관례
+
+operator 키워드를 붙임으로써 어떤 함수가 관례를 따르는 함수임을 명확히 알 수 있다.
+
+```kotlin
+data class Point(val x: Int, val y: Int) {
+    operator fun plus(other: Point): Point {
+        return Point(x + other.x, y + other.y)
+    }
+}
+```
+operator 붙이지 않으면 
+operator modifier is required...
+
+#### 7.1 산술 연산자 오버로딩
+++, --, +=, inc, mod, not
+plusAssign, unaryMinus
+
+#### 7.2 비교 연산자 오버로딩
+
+a == b -> a?.equals(b) ?: (b == null)
+
+compareTo
+``` kotlin
+class Person : Comparable<Person> {
+    override fun compareTo(other: Person): Int {
+        return compareValuesBy(this, other, Person::name, Person::age)
+    }
+}
+```
+
+#### 7.3 컬렉션과 범위에 대해 쓸 수 있는 관례
+get, set, in, rangeTo
+
+iterator
+
+#### 7.4 구조 분해 선언과 component 함수
+```kotlin
+class Point(val x: Int, val y: Int) {
+    operator fun component1() = x
+    operator fun component2() = y
+}
+```
+
+#### 7.5 프로퍼티 접근자 로직 재활용: 위임 프로퍼티
+
+```kotlin
+classe Delegate {
+    operator fun getValue(...) {...}
+    operator fun setValue(...) {...}
+}
+
+class Foo {
+    var p: Type by Delegate()
+}
+```
+코틀린 라이브러리는 프로퍼티 위임을 사용해 프로퍼티 초기화를 지연시킬 수 있다.
+
+lazy{} 함수는 기본적으로 thread safe
+
+ObservableProperty를 프로퍼티 위임에 사용할 수 있게함
+
+위임 프로퍼티를 통해 프로퍼티 값을 저장하거나 초기화하거나 읽거나 변경할 떄 사용하는 로직을 재활용할 수 있다.
+위임 프로퍼티는 프레임워크를 만들 때 아주 유용하다.
 
 
 
