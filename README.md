@@ -1783,3 +1783,64 @@ fun readFirstLineFromFile(path: String) {
 
 무명함수는 기본적으로 로컬 return
 
+### 9 제네릭스
+
+#### 제네릭 타입 파라미터
+선언 지점 변성을 사용하면 기저 타입은 같지만 타입 인자가 다른 두 제네릭 타입 List<Any> 를 인자로 받는 함수에게 List<Int> 타입의 값을 전달할 수 있을지 여부를 선언 지점에 변성을 통해 지정할 수 있다.
+
+사용 지점 변성은 같은 목표를 제너릭 타입 값을 사용하는 위치에서 파라미터 타입에 대한 제약을 표시하는 방식으로 달성한다.
+
+```kotlin
+fun <T> List<T>.slice(indices: IntRange): List<T>
+
+filter (T) -> Boolean
+fun <T> List<T>.filter(predicate: (T) -> Boolean): List<T>
+```
+
+#### 제네릭 클래스 선언
+
+```kotlin
+interface Comparable<T> {
+    fun compareTo(other: T): Int
+}
+```
+
+#### 타입 파라미터 제약
+fun <T: Number> List<T>.sum(): T
+
+널이 될 수 없는 타입
+fun <T: Any> 
+
+jvm의 제네릭스는 보통 type erasure을 사용해 구현된다. inline으로 선언하면 타입 인자가 지워지지 않게 할 수 있음
+타입 파라미터가 2개 이상이면 *를 포함시켜야 한다.
+
+```kotlin
+inline fun <reified T> isA(value: Any) = value is T
+```
+를 만들면 value의 타입이 T의 인스턴스인지를 실행 시점에 검사할 수 있다.
+-> filterIsInstance 함수가 이런 방식으로 구현되어 있다.
+
+컴파일러는 인라인 함수의 본문을 구현한 바이트코드를 그 함수가 호출되는 모든 지점에 삽입하기 때문에 확인 가능
+val serviceImpl = loadService<Service>()
+
+#### 클래스, 타입, 하위 타입을 잘 알아야함
+어떤 타입 A의 값이 필요한 모든 장소에 어떤 타입 B의 값을 넣어도 아무 문제가 없다면 타입 B는 타입 A의 하위 타입이다.
+
+#### 공변성: 하위 타입 관계를 유지
+A가 B의 하위 타입일 떄 Producer<A>도 Producer<B>의 하위 타입이면 Producer는 공변적
+공변적을 표시하려면 out 키워드를 사용한다.
+
+```kotlin
+interface Producer<out T> {
+    fun produce(): T
+}
+```
+함수 파라미터 타입은 인 위치, 함수 반환 타입은 아웃 위치에 있음
+타입 파라미터 T에 붙은 out 키워드는 공변성을 만족하고, T가 아웃 위치에만 쓰인다는 것을 의미한다.
+
+#### 반공변성: 뒤집힌 하위 관계 타입
+
+in이라는 키워드는 그 키워드가 붙은 타입이 이 클래스의 메소드 안으로 전달 돼 메소드에 의해 소비된다는 뜻
+Consumer<Animal>은 Consumer<Cat>의 하위 타입이다.
+
+### 10 애노테이션과 리플렉션
