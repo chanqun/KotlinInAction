@@ -1901,3 +1901,77 @@ fun serializerForType
 
 ### 11 DSL 만들기
 
+#### API에서 DSL로
+
+- 코드를 읽는 독자들이 어떤 일이 벌어질지 명확하게 이해할 수 있어야 한다.
+- 코드가 간결해야한다.
+
+```kotlin
+s.capitalize() // 확장함수, 
+1 to "one" // 중위 호출, 
+set += 2 // 연산자 오버로딩, 
+map["key"] // get 메소드에 대한 관례, 
+file.use { it.read() } // 람다를 괄호 밖으로 빼내기,
+with (sb) { append("yes") } // 수신 객체 지정 람다
+```
+
+테이블 예제
+```kotlin
+fun createSimpleTable() = createHTML() {
+    table {
+        tr {
+            td { +"cell" }
+        }
+    }
+}
+```
+
+```kotlin
+open class Tag
+
+class TABLE : Tag {
+    fun tr(init : TR.() -> Unit)
+}
+
+class TR : Tag {
+    fun td(init : TD.() -> Unit)
+}
+
+class TD : Tag
+```
+
+### 11.3 invoke 관례를 사용한 더 유연한 블록 중첩
+```kotlin
+class Greeter(val greeting: String) {
+    operator fun invoke(name: String) {
+        println("$greetin, $name!")
+    }
+}
+```
+DSL과 invoke 관계
+
+gradle
+
+#### 11.4 실전 코틀린 DSL
+```kotlin
+infix fun <T> T.should(matcher: Matcher<T>) = matcher.test(this) 
+```
+
+중위 호출 연쇄를 지원하기 위한 API 정의
+```kotlin
+object start
+
+infix fun String.should(x:start): StartWrapper = StartWrapper(this)
+class StartWrapper(val value: String) {
+    infix fun with(prefix: String) = if (!value.startsWith(prefix)) {
+        throw AssertionError()
+    } else {
+        Unit
+    }
+}
+
+```
+
+안드로이드 레이아웃 정의 DSL도 있음
+
+
